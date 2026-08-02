@@ -50,9 +50,9 @@ sqlite
 
 # AI
 ollama
-piper-tts
-tesseract-ocr
-tesseract-ocr-eng
+piper-tts-bin
+tesseract
+tesseract-data-eng
 
 # Media
 yt-dlp
