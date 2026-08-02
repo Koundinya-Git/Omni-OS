@@ -1,0 +1,109 @@
+# Bootloaders and System
+syslinux
+grub
+efibootmgr
+edk2-shell
+memtest86+
+memtest86+-efi
+
+# Kernels
+linux-zen
+linux-zen-headers
+linux-lts
+linux-lts-headers
+linux
+linux-headers
+linux-firmware
+
+# Filesystem & Storage
+btrfs-progs
+snapper
+dosfstools
+mtools
+exfatprogs
+ntfs-3g
+parted
+cryptsetup
+
+# Network
+networkmanager
+wireguard-tools
+openvpn
+
+# Base system & CLI
+base
+base-devel
+cmake
+gcc
+git
+nano
+vim
+curl
+wget
+htop
+btop
+ripgrep
+fd
+unzip
+tar
+sqlite
+
+# AI
+ollama
+piper-tts
+tesseract-ocr
+tesseract-ocr-eng
+
+# Media
+yt-dlp
+ffmpeg
+
+# Fonts
+ttf-jetbrains-mono-nerd
+noto-fonts-emoji
+
+# Terminal
+kitty
+cool-retro-term
+zsh
+starship
+
+# System UI & Audio
+fastfetch
+plymouth
+auto-cpufreq
+pipewire
+pipewire-alsa
+pipewire-pulse
+pipewire-jack
+wireplumber
+
+# Desktop & Wayland
+wayland
+hyprland
+xdg-desktop-portal-hyprland
+xdg-utils
+waybar
+rofi-wayland
+swaync
+hyprpaper
+grim
+slurp
+swappy
+wl-clipboard
+wtype
+thunar
+tumbler
+polkit-kde-agent
+
+# Gaming
+gamescope
+mangohud
+
+# Installer
+calamares
+
+# Archiso specifics
+arch-install-scripts
+mkinitcpio
+mkinitcpio-archiso

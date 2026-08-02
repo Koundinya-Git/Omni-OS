@@ -1,0 +1,12 @@
+[Unit]
+Description=Omni-OS Observer Daemon
+After=graphical.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/omni-observer-daemon
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

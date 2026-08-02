@@ -1,0 +1,12 @@
+[Unit]
+Description=Omni-OS Recall Daemon
+After=omni-hw-profiler.service graphical.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/omni-recall-backend
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Omni-OS
+Description=The Sovereign AI-Powered OS
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/omni-os
+ScriptFile=/usr/share/plymouth/themes/omni-os/omni-os.script

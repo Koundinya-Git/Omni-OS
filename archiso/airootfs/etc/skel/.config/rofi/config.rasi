@@ -1,0 +1,111 @@
+/**
+ * Rofi Glassmorphic Theme (Tokyo Night inspired)
+ */
+
+configuration {
+    modi: "drun,run,window";
+    show-icons: true;
+    display-drun: "";
+    display-run: "";
+    display-window: "";
+    drun-display-format: "{name}";
+    font: "JetBrainsMono Nerd Font 12";
+}
+
+* {
+    bg: rgba(26, 27, 38, 0.7);
+    bg-alt: rgba(36, 40, 59, 0.8);
+    fg: #c0caf5;
+    fg-alt: #a9b1d6;
+    accent: #7dcfff;
+    accent-alt: #bb9af7;
+    border-color: rgba(125, 207, 255, 0.3);
+    
+    background-color: transparent;
+    text-color: @fg;
+}
+
+window {
+    transparency: "real";
+    background-color: @bg;
+    border: 2px;
+    border-color: @border-color;
+    border-radius: 12px;
+    width: 600px;
+    padding: 20px;
+}
+
+prompt {
+    enabled: true;
+    padding: 10px 15px;
+    background-color: @bg-alt;
+    text-color: @accent;
+    border-radius: 8px;
+    font: "JetBrainsMono Nerd Font 14";
+}
+
+entry {
+    background-color: @bg-alt;
+    text-color: @fg;
+    placeholder-color: @fg-alt;
+    expand: true;
+    horizontal-align: 0;
+    placeholder: "Search...";
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin: 0px 0px 0px 10px;
+}
+
+inputbar {
+    children: [ prompt, entry ];
+    background-color: transparent;
+    spacing: 0px;
+    margin: 0px 0px 20px 0px;
+}
+
+listview {
+    background-color: transparent;
+    padding: 0px;
+    columns: 1;
+    lines: 8;
+    spacing: 8px;
+    cycle: true;
+    dynamic: true;
+    layout: vertical;
+}
+
+mainbox {
+    background-color: transparent;
+    children: [ inputbar, listview ];
+    spacing: 10px;
+    padding: 10px;
+}
+
+element {
+    background-color: transparent;
+    text-color: @fg;
+    orientation: horizontal;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+element-icon {
+    size: 24px;
+    background-color: transparent;
+    padding: 0px 10px 0px 0px;
+}
+
+element-text {
+    expand: true;
+    horizontal-align: 0;
+    vertical-align: 0.5;
+    background-color: transparent;
+    text-color: inherit;
+}
+
+element selected {
+    background-color: @bg-alt;
+    text-color: @accent;
+    border: 1px;
+    border-color: @accent-alt;
+}

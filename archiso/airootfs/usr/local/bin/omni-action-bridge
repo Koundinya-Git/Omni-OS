@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# omni-action-bridge - Zero-Code Agentic OS
+
+export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
+
+prompt=$(kitty --class scratchpad -e bash -c 'read -rp "Omni Action> " cmd; echo "$cmd"')
+
+if [ -z "$prompt" ]; then exit 0; fi
+
+SYSTEM_PROMPT="Translate the following natural language request into a valid bash script. Output ONLY the bash script wrapped in \`\`\`bash ... \`\`\` blocks. If you need to inject keystrokes, include [WTYPE:text] in your output."
+
+response=$(curl -s -X POST http://localhost:11434/api/generate -d "{\"model\": \"llama3.2:8b\", \"prompt\": \"$SYSTEM_PROMPT\nUser Request: $prompt\", \"stream\": false}" | jq -r '.response')
+
+script=$(echo "$response" | awk '/^```bash/{flag=1; next} /^```/{flag=0} flag')
+wtypes=$(echo "$response" | grep -o '\[WTYPE:[^]]*\]' | sed 's/\[WTYPE://;s/\]//' || true)
+
+if [ -n "$script" ]; then
+    echo -e "Proposed Action:\n$script\nExecute? (y/n)"
+    read -r confirm
+    if [ "$confirm" = "y" ]; then
+        echo "$script" > /tmp/omni-action.sh
+        bash -e /tmp/omni-action.sh
+    fi
+fi
+
+if [ -n "$wtypes" ]; then
+    for wt in $wtypes; do
+        wtype "$wt"
+    done
+fi

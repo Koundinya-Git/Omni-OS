@@ -1,0 +1,13 @@
+[Unit]
+Description=Omni-OS Neural Setup Engine
+After=ollama.service graphical.target
+ConditionPathExists=!%h/.config/omni/.setup-complete
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/omni-setup-engine
+StandardInput=tty
+TTYPath=/dev/tty1
+
+[Install]
+WantedBy=graphical.target
