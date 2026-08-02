@@ -1,7 +1,7 @@
 FROM archlinux:latest
 
 RUN pacman -Syu --noconfirm && \
-    pacman -S --noconfirm archiso git mtools dosfstools squashfs-tools libisoburn && \
+    pacman -S --noconfirm archiso git mtools dosfstools squashfs-tools libisoburn grub && \
     pacman -Scc --noconfirm
 
 WORKDIR /build
