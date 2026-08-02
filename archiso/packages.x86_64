@@ -50,7 +50,6 @@ sqlite
 
 # AI
 ollama
-piper-tts-bin
 tesseract
 tesseract-data-eng
 

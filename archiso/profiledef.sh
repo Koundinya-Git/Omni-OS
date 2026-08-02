@@ -13,8 +13,6 @@ initramfs_generator="mkinitcpio"
 pacman_conf="pacman.conf"
 
 file_permissions=(
-  ["/etc/shadow"]="0:0:400"
-  ["/etc/gshadow"]="0:0:400"
   ["/etc/sudoers.d/omni"]="0:0:440"
   ["/usr/local/bin/deep-work-trigger.sh"]="0:0:755"
   ["/usr/local/bin/omni-action-bridge"]="0:0:755"
