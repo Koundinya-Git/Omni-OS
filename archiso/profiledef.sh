@@ -10,6 +10,7 @@ install_dir="arch"
 buildmodes=('iso')
 bootmodes=('bios.syslinux' 'uefi.grub')
 initramfs_generator="mkinitcpio"
+pacman_conf="pacman.conf"
 
 file_permissions=(
   ["/etc/shadow"]="0:0:400"
