@@ -1,20 +1,18 @@
 FROM archlinux:base-devel
 
 RUN pacman -Syu --noconfirm && \
-    pacman -S --noconfirm archiso git mtools dosfstools squashfs-tools libisoburn grub && \
+    pacman -S --noconfirm archiso git mtools dosfstools squashfs-tools libisoburn grub rust cargo cmake qt6-base && \
     pacman -Scc --noconfirm
 
 RUN useradd -m builder && echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 USER builder
-RUN git clone https://aur.archlinux.org/paru-bin.git /tmp/paru && cd /tmp/paru && makepkg -sri --noconfirm
+RUN git clone https://aur.archlinux.org/paru.git /tmp/paru && cd /tmp/paru && makepkg -sri --noconfirm
 RUN paru -S --noconfirm opera-gx catppuccin-gtk-theme-mocha
 
 USER root
 RUN mkdir -p /customrepo && \
     find /home/builder/.cache/paru/clone -name "*.pkg.tar.zst" -exec cp {} /customrepo/ \; && \
     repo-add /customrepo/customrepo.db.tar.gz /customrepo/*.pkg.tar.zst
-
-RUN pacman -S --noconfirm rust cargo cmake qt6-base
 
 WORKDIR /build
 COPY archiso/ /build/profile/
