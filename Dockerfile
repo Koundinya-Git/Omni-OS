@@ -7,7 +7,7 @@ RUN pacman -Syu --noconfirm && \
 RUN useradd -m builder && echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 USER builder
 RUN git clone https://aur.archlinux.org/paru.git /tmp/paru && cd /tmp/paru && makepkg -sri --noconfirm
-RUN paru -S --noconfirm opera-gx catppuccin-gtk-theme-mocha vmtouch
+RUN paru -S --noconfirm opera-gx catppuccin-gtk-theme-mocha
 
 USER root
 RUN mkdir -p /customrepo && \
@@ -17,6 +17,11 @@ RUN mkdir -p /customrepo && \
 WORKDIR /build
 COPY archiso/ /build/profile/
 COPY src/ /build/src/
+
+RUN git clone https://github.com/hoytech/vmtouch.git /tmp/vmtouch && \
+    cd /tmp/vmtouch && \
+    gcc -O3 -o vmtouch vmtouch.c && \
+    cp vmtouch /build/profile/airootfs/usr/local/bin/
 
 RUN cd /build/src/omni-precacher && cargo build --release && \
     cp target/release/omni-precacher /build/profile/airootfs/usr/local/bin/
