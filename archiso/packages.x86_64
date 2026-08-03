@@ -50,8 +50,11 @@ sqlite
 
 # AI
 ollama
+python-prompt_toolkit
+python-sentence-transformers
 tesseract
 tesseract-data-eng
+vmtouch
 
 # Media
 yt-dlp
@@ -106,3 +109,28 @@ calamares
 arch-install-scripts
 mkinitcpio
 mkinitcpio-archiso
+imv
+
+# Core proper OS features
+greetd
+python-pyqt6
+network-manager-applet
+bluez
+bluez-utils
+blueman
+pavucontrol
+brightnessctl
+cliphist
+thunar-archive-plugin
+file-roller
+gvfs
+mousepad
+mpv
+papirus-icon-theme
+nwg-look
+
+
+opera-gx
+catppuccin-gtk-theme-mocha
+python-pam
+

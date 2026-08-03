@@ -1,0 +1,11 @@
+[Unit]
+Description=Omni-OS Live User Setup
+Before=getty@tty1.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash -c "useradd -m -G wheel,video,audio,input,storage,network,power,optical,storage -s /usr/bin/zsh omni || true; passwd -d omni || true; cp -rT /etc/skel /home/omni || true; chown -R omni:omni /home/omni || true"
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

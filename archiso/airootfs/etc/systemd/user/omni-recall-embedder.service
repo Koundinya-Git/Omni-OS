@@ -1,0 +1,12 @@
+[Unit]
+Description=Omni-Recall Semantic Vector Embedder
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/omni-recall-embedder
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

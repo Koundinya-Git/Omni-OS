@@ -19,7 +19,11 @@ file_permissions=(
   ["/usr/local/bin/omni-cli"]="0:0:755"
   ["/usr/local/bin/omni-hw-profiler"]="0:0:755"
   ["/usr/local/bin/omni-observer-daemon"]="0:0:755"
+  ["/usr/local/bin/omni-precacher"]="0:0:755"
   ["/usr/local/bin/omni-recall-backend"]="0:0:755"
+  ["/usr/local/bin/omni-recall-embedder"]="0:0:755"
+  ["/usr/local/bin/omni-recall-search"]="0:0:755"
   ["/usr/local/bin/omni-setup-engine"]="0:0:755"
+  ["/usr/local/bin/omni-shell"]="0:0:755"
   ["/usr/local/bin/omni-vram-manager"]="0:0:755"
 )

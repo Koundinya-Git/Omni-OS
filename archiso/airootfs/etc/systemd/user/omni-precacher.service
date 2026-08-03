@@ -1,0 +1,11 @@
+[Unit]
+Description=Omni-OS Predictive Pre-Caching Daemon
+After=omni-observer.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/omni-precacher
+Restart=always
+RestartSec=60
+[Install]
+WantedBy=default.target

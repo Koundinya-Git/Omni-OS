@@ -1,11 +1,32 @@
-FROM archlinux:latest
+FROM archlinux:base-devel
 
 RUN pacman -Syu --noconfirm && \
     pacman -S --noconfirm archiso git mtools dosfstools squashfs-tools libisoburn grub && \
     pacman -Scc --noconfirm
 
+RUN useradd -m builder && echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+USER builder
+RUN git clone https://aur.archlinux.org/paru-bin.git /tmp/paru && cd /tmp/paru && makepkg -sri --noconfirm
+RUN paru -S --noconfirm opera-gx catppuccin-gtk-theme-mocha python-pam python-pyqt6 || true
+
+USER root
+RUN mkdir -p /customrepo && \
+    find /home/builder/.cache/paru/clone -name "*.pkg.tar.zst" -exec cp {} /customrepo/ \; && \
+    repo-add /customrepo/custom.db.tar.gz /customrepo/*.pkg.tar.zst || true
+
+RUN pacman -S --noconfirm rust cargo cmake qt6-base
+
 WORKDIR /build
 COPY archiso/ /build/profile/
+COPY src/ /build/src/
+
+RUN cd /build/src/omni-precacher && cargo build --release && \
+    cp target/release/omni-precacher /build/profile/airootfs/usr/local/bin/
+
+RUN cd /build/src/omni-greeter && mkdir build && cd build && \
+    cmake .. && make && \
+    cp omni-greeter /build/profile/airootfs/usr/local/bin/
+
 RUN chmod +x /build/profile/airootfs/usr/local/bin/*
 
 RUN echo '#!/bin/bash' > /build/entrypoint.sh && \

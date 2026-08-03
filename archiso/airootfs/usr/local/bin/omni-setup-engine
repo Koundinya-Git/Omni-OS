@@ -12,7 +12,7 @@ fi
 
 source /etc/omni/hw-tier
 
-model="qwen2.5:0.5b"
+model="llama3.2:1b"
 if [ "$OMNI_TIER" -ge 15 ]; then model="llama3.1:70b";
 elif [ "$OMNI_TIER" -ge 10 ]; then model="llama3.2:8b";
 elif [ "$OMNI_TIER" -ge 5 ]; then model="llama3.2:3b"; fi

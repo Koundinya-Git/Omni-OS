@@ -9,7 +9,7 @@ if [ -z "$prompt" ]; then exit 0; fi
 
 SYSTEM_PROMPT="Translate the following natural language request into a valid bash script. Output ONLY the bash script wrapped in \`\`\`bash ... \`\`\` blocks. If you need to inject keystrokes, include [WTYPE:text] in your output."
 
-response=$(curl -s -X POST http://localhost:11434/api/generate -d "{\"model\": \"llama3.2:8b\", \"prompt\": \"$SYSTEM_PROMPT\nUser Request: $prompt\", \"stream\": false}" | jq -r '.response')
+response=$(curl -s -X POST http://localhost:11434/api/generate -d "{\"model\": \"llama3.2:1b\", \"prompt\": \"$SYSTEM_PROMPT\nUser Request: $prompt\", \"stream\": false}" | jq -r '.response')
 
 script=$(echo "$response" | awk '/^```bash/{flag=1; next} /^```/{flag=0} flag')
 wtypes=$(echo "$response" | grep -o '\[WTYPE:[^]]*\]' | sed 's/\[WTYPE://;s/\]//' || true)

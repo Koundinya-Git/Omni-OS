@@ -1,0 +1,90 @@
+#!/opt/omni-venv/bin/python
+import os
+import time
+import sqlite3
+import subprocess
+import chromadb
+from chromadb.utils import embedding_functions
+
+def get_power_profile():
+    try:
+        res = subprocess.run(["powerprofilesctl", "get"], capture_output=True, text=True)
+        return res.stdout.strip()
+    except FileNotFoundError:
+        return "balanced"
+
+def get_active_window():
+    try:
+        res = subprocess.run(["hyprctl", "activewindow", "-j"], capture_output=True, text=True)
+        import json
+        data = json.loads(res.stdout)
+        return data.get("class", ""), data.get("title", "")
+    except:
+        return "", ""
+
+def main():
+    db_path = os.path.expanduser("~/.local/share/omni/recall.db")
+    chroma_path = os.path.expanduser("~/.local/share/omni/chroma")
+    
+    while not os.path.exists(db_path):
+        time.sleep(10)
+        
+    client = chromadb.PersistentClient(path=chroma_path)
+    ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
+    collection = client.get_or_create_collection(name="recall_frames", embedding_function=ef)
+    
+    conn = sqlite3.connect(db_path)
+    
+    # Create migration for existing db if needed
+    try:
+        conn.execute("ALTER TABLE recall_frames ADD COLUMN embedded INTEGER DEFAULT 0;")
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+        
+    last_active_time = time.time()
+    last_window_info = ""
+
+    while True:
+        profile = get_power_profile()
+        app_class, app_title = get_active_window()
+        current_window_info = f"{app_class}:{app_title}"
+        
+        if current_window_info != last_window_info:
+            last_window_info = current_window_info
+            last_active_time = time.time()
+            afk = False
+        else:
+            afk = (time.time() - last_active_time) > 300
+
+        if profile == "power-saver" and not afk:
+            time.sleep(30)
+            continue
+            
+        c = conn.cursor()
+        c.execute("SELECT id, timestamp, screenshot_path, ocr_text FROM recall_frames WHERE embedded = 0 AND ocr_text IS NOT NULL LIMIT 5;")
+        rows = c.fetchall()
+        
+        if not rows:
+            time.sleep(10)
+            continue
+            
+        documents = []
+        metadatas = []
+        ids = []
+        
+        for row_id, ts, path, text in rows:
+            combined_text = f"App: {app_class}\nTitle: {app_title}\nTime: {ts}\nContent: {text}"
+            documents.append(combined_text)
+            metadatas.append({"timestamp": ts, "path": path, "app": app_class, "title": app_title})
+            ids.append(str(row_id))
+            
+        collection.add(documents=documents, metadatas=metadatas, ids=ids)
+        
+        for row_id in ids:
+            c.execute("UPDATE recall_frames SET embedded = 1 WHERE id = ?", (int(row_id),))
+        conn.commit()
+        time.sleep(1)
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# omni-cli - CLI interface
 
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
 
@@ -10,15 +9,14 @@ case "$1" in
         echo "Hardware Tier: $OMNI_TIER"
         echo "Ollama Status: $(systemctl is-active ollama.service 2>/dev/null || echo 'inactive')"
         echo "Observer Daemon: $(systemctl --user is-active omni-observer.service 2>/dev/null || echo 'inactive')"
-        echo "Recall Stats: $(sqlite3 ~/.local/share/omni/recall.db 'select count(*) from recall_frames;' 2>/dev/null || echo 0) frames recorded."
         ;;
     ask)
         shift
-        ollama run llama3.2:8b "$*"
+        ollama run llama3.2:1b "$*"
         ;;
     recall)
         shift
-        sqlite3 ~/.local/share/omni/recall.db "SELECT timestamp, screenshot_path FROM recall_frames WHERE ocr_text LIKE '%$*%';"
+        /usr/local/bin/omni-recall-ui "$*"
         ;;
     deep-work)
         /usr/local/bin/deep-work-trigger.sh "$2"
