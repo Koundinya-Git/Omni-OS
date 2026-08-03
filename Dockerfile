@@ -17,7 +17,7 @@ RUN mkdir -p /customrepo && \
 WORKDIR /build
 COPY archiso/ /build/profile/
 COPY src/ /build/src/
-COPY calamares/ /build/profile/airootfs/etc/calamares/
+COPY calamares/ /build/profile/airootfs/etc/omni-installer-config/
 
 RUN git clone https://github.com/hoytech/vmtouch.git /tmp/vmtouch && \
     cd /tmp/vmtouch && \
