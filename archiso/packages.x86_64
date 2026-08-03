@@ -113,7 +113,6 @@ imv
 
 # Core proper OS features
 greetd
-python-pyqt6
 network-manager-applet
 bluez
 bluez-utils
@@ -132,5 +131,4 @@ nwg-look
 
 opera-gx
 catppuccin-gtk-theme-mocha
-python-pam
 
