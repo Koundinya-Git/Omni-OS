@@ -24,14 +24,14 @@ strings:
     releaseNotesUrl:     "https://omni-os.dev/release-notes"
 
 images:
-    productLogo:         "omni-logo.svg"
-    productIcon:         "omni-icon.svg"
-    productWelcome:      "omni-welcome.png"
+    productLogo:         "logo.png"
+    productIcon:         "logo.png"
+    productWelcome:      "logo.png"
 
 slideshow:               "show.qml"
 
 style:
-    sidebarBackground:       "#1a1b26"
-    sidebarText:             "#c0caf5"
-    sidebarTextSelect:       "#7dcfff"
-    sidebarTextHighlight:    "#bb9af7"
+    sidebarBackground:       "#050505"
+    sidebarText:             "#ffffff"
+    sidebarTextSelect:       "#00e5ff"
+    sidebarTextHighlight:    "#0044ff"
