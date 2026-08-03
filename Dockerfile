@@ -1,13 +1,13 @@
 FROM archlinux:base-devel
 
 RUN pacman -Syu --noconfirm && \
-    pacman -S --noconfirm archiso git mtools dosfstools squashfs-tools libisoburn grub rust cargo cmake qt6-base && \
+    pacman -S --noconfirm archiso git mtools dosfstools squashfs-tools libisoburn grub rust cargo cmake qt6-base perl && \
     pacman -Scc --noconfirm
 
 RUN useradd -m builder && echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 USER builder
 RUN git clone https://aur.archlinux.org/paru.git /tmp/paru && cd /tmp/paru && makepkg -sri --noconfirm
-RUN paru -S --noconfirm opera-gx catppuccin-gtk-theme-mocha python-sentence-transformers vmtouch
+RUN paru -S --noconfirm opera-gx catppuccin-gtk-theme-mocha vmtouch
 
 USER root
 RUN mkdir -p /customrepo && \

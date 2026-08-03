@@ -51,7 +51,6 @@ sqlite
 # AI
 ollama
 python-prompt_toolkit
-python-sentence-transformers
 tesseract
 tesseract-data-eng
 vmtouch
