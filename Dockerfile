@@ -12,7 +12,7 @@ RUN paru -S --noconfirm opera-gx catppuccin-gtk-theme-mocha python-pam python-py
 USER root
 RUN mkdir -p /customrepo && \
     find /home/builder/.cache/paru/clone -name "*.pkg.tar.zst" -exec cp {} /customrepo/ \; && \
-    repo-add /customrepo/custom.db.tar.gz /customrepo/*.pkg.tar.zst || true
+    repo-add /customrepo/customrepo.db.tar.gz /customrepo/*.pkg.tar.zst || true
 
 RUN pacman -S --noconfirm rust cargo cmake qt6-base
 
