@@ -1,1 +1,10 @@
-[terminal]`nvt = 1`n`n[default_session]`ncommand = "Hyprland"`nuser = "omni"`n`n[initial_session]`ncommand = "Hyprland"`nuser = "omni"`n
+[terminal]
+vt = 1
+
+[default_session]
+command = "Hyprland"
+user = "omni"
+
+[initial_session]
+command = "Hyprland"
+user = "omni"

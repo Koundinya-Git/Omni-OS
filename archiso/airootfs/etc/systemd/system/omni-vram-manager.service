@@ -1,12 +1,10 @@
 [Unit]
 Description=Omni-OS VRAM Manager
 After=ollama.service
-
 [Service]
 Type=simple
 ExecStart=/usr/local/bin/omni-vram-manager
 Restart=always
 RestartSec=5
-
 [Install]
 WantedBy=multi-user.target

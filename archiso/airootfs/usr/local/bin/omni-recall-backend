@@ -1,40 +1,30 @@
 #!/usr/bin/env bash
-# omni-recall-backend - Wayland screenshot and OCR loop
-
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
-
 source /etc/omni/hw-tier
-INTERVAL=300
-if [ "$OMNI_TIER" -ge 15 ]; then INTERVAL=2;
-elif [ "$OMNI_TIER" -ge 10 ]; then INTERVAL=10;
-elif [ "$OMNI_TIER" -ge 5 ]; then INTERVAL=60; fi
-
-DB_DIR="$HOME/.local/share/omni"
-FRAMES_DIR="$DB_DIR/recall-frames"
-DB_FILE="$DB_DIR/recall.db"
-
-mkdir -p "$FRAMES_DIR"
-
-sqlite3 "$DB_FILE" "CREATE TABLE IF NOT EXISTS recall_frames(id INTEGER PRIMARY KEY, timestamp INTEGER, ocr_text TEXT, screenshot_path TEXT);"
-
+inv=300
+if [ "$OMNI_TIER" -ge 15 ]; then inv=2
+elif [ "$OMNI_TIER" -ge 10 ]; then inv=10
+elif [ "$OMNI_TIER" -ge 5 ]; then inv=60; fi
+db_dir="$HOME/.local/share/omni"
+f_dir="$db_dir/recall-frames"
+db="$db_dir/recall.db"
+mkdir -p "$f_dir"
+sqlite3 "$db" "CREATE TABLE IF NOT EXISTS recall_frames(id INTEGER PRIMARY KEY, timestamp INTEGER, ocr_text TEXT, screenshot_path TEXT);"
 while true; do
-    timestamp=$(date +%s)
-    tmp_img="/tmp/omni-recall-frame.png"
-    final_img="$FRAMES_DIR/${timestamp}.png"
-    
+    ts=$(date +%s)
+    t_img="/tmp/omni-recall-frame.png"
+    f_img="$f_dir/${ts}.png"
     if command -v grim >/dev/null; then
-        grim -c "$tmp_img" 2>/dev/null
-        if [ -f "$tmp_img" ]; then
+        grim -c "$t_img" 2>/dev/null
+        if [ -f "$t_img" ]; then
             if [ "$OMNI_TIER" -ge 15 ] && command -v ollama >/dev/null; then
-                ocr_text=$(ollama run minicpm-v "Extract all text from this image" --image "$tmp_img" 2>/dev/null)
+                txt=$(ollama run minicpm-v "Extract all text from this image" --image "$t_img" 2>/dev/null)
             else
-                ocr_text=$(tesseract "$tmp_img" stdout -l eng 2>/dev/null)
+                txt=$(tesseract "$t_img" stdout -l eng 2>/dev/null)
             fi
-            
-            mv "$tmp_img" "$final_img"
-            sqlite3 "$DB_FILE" "INSERT INTO recall_frames (timestamp, ocr_text, screenshot_path) VALUES ($timestamp, '$(echo "$ocr_text" | sed "s/'/''/g")', '$final_img');"
+            mv "$t_img" "$f_img"
+            sqlite3 "$db" "INSERT INTO recall_frames (timestamp, ocr_text, screenshot_path) VALUES ($ts, '$(echo "$txt" | sed "s/'/''/g")', '$f_img');"
         fi
     fi
-    
-    sleep "$INTERVAL"
+    sleep "$inv"
 done

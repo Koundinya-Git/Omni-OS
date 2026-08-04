@@ -1,69 +1,42 @@
 #!/usr/bin/env bash
-# omni-setup-engine - First-boot AI setup
-
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
-
-CONFIG_DIR="$HOME/.config/omni"
-mkdir -p "$CONFIG_DIR"
-
-if [ -f "$CONFIG_DIR/.setup-complete" ]; then
-    exit 0
-fi
-
+cfg="$HOME/.config/omni"
+mkdir -p "$cfg"
+[ -f "$cfg/.setup-complete" ] && exit 0
 source /etc/omni/hw-tier
-
-model="llama3.2:1b"
-if [ "$OMNI_TIER" -ge 15 ]; then model="llama3.1:70b";
-elif [ "$OMNI_TIER" -ge 10 ]; then model="llama3.2:8b";
-elif [ "$OMNI_TIER" -ge 5 ]; then model="llama3.2:3b"; fi
-
+mdl="llama3.2:1b"
+if [ "$OMNI_TIER" -ge 15 ]; then mdl="llama3.1:70b"
+elif [ "$OMNI_TIER" -ge 10 ]; then mdl="llama3.2:8b"
+elif [ "$OMNI_TIER" -ge 5 ]; then mdl="llama3.2:3b"; fi
 systemctl --user start ollama.service || sudo systemctl start ollama.service || true
 ollama serve &>/dev/null &
-
-echo "Pulling AI model ($model)..."
-ollama pull "$model" >/dev/null 2>&1
-
-SYSTEM_PROMPT="Interview the user about: major/profession, preferred browser, media player, social apps, aesthetic preferences, distraction websites, AI persona style. Keep questions brief. Output action tags in JSON-like structure: [INSTALL:pkg1,pkg2], [THEME:name], [BLOCK:site1,site2], [PERSONA:style]."
-
-conversation_history="[{\"role\": \"system\", \"content\": \"$SYSTEM_PROMPT\"}]"
-
+echo "Pulling $mdl..."
+ollama pull "$mdl" >/dev/null 2>&1
+sys="Interview the user about: major/profession, preferred browser, media player, social apps, aesthetic preferences, distraction websites, AI persona style. Keep questions brief. Output action tags in JSON-like structure: [INSTALL:pkg1,pkg2], [THEME:name], [BLOCK:site1,site2], [PERSONA:style]."
+hist="[{\"role\": \"system\", \"content\": \"$sys\"}]"
 clear
 echo "Welcome to Omni-OS Setup."
 echo "I am your setup assistant. Let's get your system ready."
-
 while true; do
-    read -rp "> " user_input
-    
-    if [[ -z "$user_input" ]]; then continue; fi
-    if [[ "$user_input" == "exit" || "$user_input" == "done" ]]; then break; fi
-
-    conversation_history=$(echo "$conversation_history" | jq --arg msg "$user_input" '. + [{"role": "user", "content": $msg}]')
-    
-    response=$(curl -s -X POST http://localhost:11434/api/chat -d "{\"model\": \"$model\", \"messages\": $conversation_history, \"stream\": false}")
-    ai_msg=$(echo "$response" | jq -r '.message.content')
-    
-    conversation_history=$(echo "$conversation_history" | jq --arg msg "$ai_msg" '. + [{"role": "assistant", "content": $msg}]')
-    
-    # Render response cleanly
-    echo ""
-    echo "Omni: $(echo "$ai_msg" | sed 's/\[.*\]//g')"
-    echo ""
-    
-    # Parse tags
-    if echo "$ai_msg" | grep -q "\[INSTALL:"; then
-        pkgs=$(echo "$ai_msg" | grep -o '\[INSTALL:[^]]*\]' | sed 's/\[INSTALL://;s/\]//' | tr ',' ' ')
-        echo "Running paru to install: $pkgs"
+    read -rp "> " inp
+    [ -z "$inp" ] && continue
+    [[ "$inp" == "exit" || "$inp" == "done" ]] && break
+    hist=$(echo "$hist" | jq --arg msg "$inp" '. + [{"role": "user", "content": $msg}]')
+    res=$(curl -s -X POST http://localhost:11434/api/chat -d "{\"model\": \"$mdl\", \"messages\": $hist, \"stream\": false}")
+    ai_m=$(echo "$res" | jq -r '.message.content')
+    hist=$(echo "$hist" | jq --arg msg "$ai_m" '. + [{"role": "assistant", "content": $msg}]')
+    echo -e "\nOmni: $(echo "$ai_m" | sed 's/\[.*\]//g')\n"
+    if echo "$ai_m" | grep -q "\[INSTALL:"; then
+        pkgs=$(echo "$ai_m" | grep -o '\[INSTALL:[^]]*\]' | sed 's/\[INSTALL://;s/\]//' | tr ',' ' ')
+        echo "Installing: $pkgs"
         sudo paru -S --noconfirm $pkgs
     fi
-    if echo "$ai_msg" | grep -q "\[BLOCK:"; then
-        sites=$(echo "$ai_msg" | grep -o '\[BLOCK:[^]]*\]' | sed 's/\[BLOCK://;s/\]//' | tr ',' '\n')
-        echo "$sites" > "$CONFIG_DIR/blocked-sites.conf"
+    if echo "$ai_m" | grep -q "\[BLOCK:"; then
+        echo "$ai_m" | grep -o '\[BLOCK:[^]]*\]' | sed 's/\[BLOCK://;s/\]//' | tr ',' '\n' > "$cfg/blocked-sites.conf"
     fi
-    if echo "$ai_msg" | grep -q "\[PERSONA:"; then
-        persona=$(echo "$ai_msg" | grep -o '\[PERSONA:[^]]*\]' | sed 's/\[PERSONA://;s/\]//')
-        echo "$persona" > "$CONFIG_DIR/persona.conf"
+    if echo "$ai_m" | grep -q "\[PERSONA:"; then
+        echo "$ai_m" | grep -o '\[PERSONA:[^]]*\]' | sed 's/\[PERSONA://;s/\]//' > "$cfg/persona.conf"
     fi
 done
-
-touch "$CONFIG_DIR/.setup-complete"
+touch "$cfg/.setup-complete"
 echo "Setup complete. Welcome to Omni-OS."

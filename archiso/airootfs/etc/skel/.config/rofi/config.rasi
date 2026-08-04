@@ -1,7 +1,3 @@
-/**
- * Rofi Glassmorphic Theme (Tokyo Night inspired)
- */
-
 configuration {
     modi: "drun,run,window";
     show-icons: true;

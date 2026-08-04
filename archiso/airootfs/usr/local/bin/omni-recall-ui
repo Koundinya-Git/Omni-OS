@@ -1,21 +1,14 @@
 #!/usr/bin/env bash
-
-QUERY=$(rofi -dmenu -p "Semantic Recall" -theme-str 'window {width: 40%;} listview {lines: 0;}')
-
-if [ -z "$QUERY" ]; then
-    exit 0
-fi
-
-notify-send "Omni-Recall" "Searching memory for: $QUERY"
-
-RES=$(omni-recall-search "$QUERY")
-MATCH=$(echo "$RES" | grep -o '"match": true')
-
-if [ -n "$MATCH" ]; then
-    IMG_PATH=$(echo "$RES" | sed -n 's/.*"path": "\([^"]*\)".*/\1/p')
-    if [ -f "$IMG_PATH" ]; then
+export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
+q=$(rofi -dmenu -p "Semantic Recall" -theme-str 'window {width: 40%;} listview {lines: 0;}')
+[ -z "$q" ] && exit 0
+notify-send "Omni-Recall" "Searching memory for: $q"
+res=$(omni-recall-search "$q")
+if echo "$res" | jq -e '.match == true' >/dev/null; then
+    img=$(echo "$res" | jq -r '.path')
+    if [ -f "$img" ]; then
         notify-send "Omni-Recall" "Match found. Opening..."
-        imv "$IMG_PATH"
+        imv "$img"
     else
         notify-send "Omni-Recall" "Match found, but image file is missing."
     fi

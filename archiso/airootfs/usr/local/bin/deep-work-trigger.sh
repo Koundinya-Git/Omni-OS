@@ -1,49 +1,35 @@
 #!/usr/bin/env bash
-# deep-work-trigger.sh - Toggle Deep Work mode
-
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
-
-LOCK_FILE="/tmp/omni-deep-work.lock"
-BLOCK_CONF="$HOME/.config/omni/blocked-sites.conf"
-HOSTS_FILE="/etc/hosts"
-
-enable_deep_work() {
-    if [ -f "$LOCK_FILE" ]; then echo "Already enabled."; exit 0; fi
-    touch "$LOCK_FILE"
-    
-    if [ -f "$BLOCK_CONF" ]; then
-        while read -r domain; do
-            if [ -n "$domain" ]; then
-                echo "127.0.0.1 $domain" | sudo tee -a "$HOSTS_FILE" >/dev/null
-                echo "::1 $domain" | sudo tee -a "$HOSTS_FILE" >/dev/null
-            fi
-        done < "$BLOCK_CONF"
+lck="/tmp/omni-deep-work.lock"
+cfg="$HOME/.config/omni/blocked-sites.conf"
+hosts="/etc/hosts"
+on() {
+    [ -f "$lck" ] && { echo "Already enabled."; exit 0; }
+    touch "$lck"
+    if [ -f "$cfg" ]; then
+        while read -r d; do
+            [ -n "$d" ] && {
+                echo "127.0.0.1 $d" | sudo tee -a "$hosts" >/dev/null
+                echo "::1 $d" | sudo tee -a "$hosts" >/dev/null
+            }
+        done < "$cfg"
     fi
-    
     notify-send "Deep Work Mode ACTIVATED"
     swaync-client --dnd-on 2>/dev/null || true
 }
-
-disable_deep_work() {
-    if [ ! -f "$LOCK_FILE" ]; then echo "Already disabled."; exit 0; fi
-    rm -f "$LOCK_FILE"
-    
-    if [ -f "$BLOCK_CONF" ]; then
-        while read -r domain; do
-            if [ -n "$domain" ]; then
-                sudo sed -i "/$domain/d" "$HOSTS_FILE"
-            fi
-        done < "$BLOCK_CONF"
+off() {
+    [ ! -f "$lck" ] && { echo "Already disabled."; exit 0; }
+    rm -f "$lck"
+    if [ -f "$cfg" ]; then
+        while read -r d; do
+            [ -n "$d" ] && sudo sed -i "/$d/d" "$hosts"
+        done < "$cfg"
     fi
-    
     notify-send "Deep Work Mode DEACTIVATED"
     swaync-client --dnd-off 2>/dev/null || true
 }
-
-if [ "$1" = "on" ]; then
-    enable_deep_work
-elif [ "$1" = "off" ]; then
-    disable_deep_work
+if [ "$1" = "on" ]; then on
+elif [ "$1" = "off" ]; then off
 else
-    if [ -f "$LOCK_FILE" ]; then disable_deep_work; else enable_deep_work; fi
+    [ -f "$lck" ] && off || on
 fi

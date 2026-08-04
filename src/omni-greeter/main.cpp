@@ -13,7 +13,6 @@
 #include <QDebug>
 #include <cstdlib>
 
-// Simple IPC client for greetd
 class IpcClient : public QObject {
     Q_OBJECT
 public:
@@ -59,20 +58,17 @@ public:
     GreeterUI(QWidget* parent = nullptr) : QWidget(parent) {
         setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
         
-        // Fill the whole screen
         setGeometry(QGuiApplication::primaryScreen()->geometry());
         setStyleSheet("background-color: #0d0f18;");
 
         auto* layout = new QVBoxLayout(this);
         layout->setAlignment(Qt::AlignCenter);
 
-        // Logo
         auto* logo = new QLabel(this);
         QPixmap pm("/usr/share/pixmaps/omni-logo.png");
         if (!pm.isNull()) {
             logo->setPixmap(pm.scaled(300, 300, Qt::KeepAspectRatio, Qt::SmoothTransformation));
             
-            // Neon glow effect
             auto* glow = new QGraphicsDropShadowEffect(this);
             glow->setBlurRadius(50);
             glow->setColor(QColor(0, 255, 255, 150));
@@ -89,7 +85,6 @@ public:
         layout->addWidget(title);
         layout->addSpacing(20);
 
-        // Password field
         passInput = new QLineEdit(this);
         passInput->setEchoMode(QLineEdit::Password);
         passInput->setPlaceholderText("ENTER AUTHORIZATION CODE");
@@ -114,10 +109,9 @@ private slots:
         if (pwd.isEmpty()) return;
 
         try {
-            // Initiate session
             QJsonObject req;
             req["type"] = "create_session";
-            req["username"] = "omni"; // hardcoded for now
+            req["username"] = "omni";
             ipc.send(req);
             
             auto res = ipc.recv();
@@ -130,7 +124,6 @@ private slots:
             }
 
             if (res["type"].toString() == "success") {
-                // Boot into Hyprland
                 QJsonObject start;
                 start["type"] = "start_session";
                 start["cmd"] = QJsonArray{"Hyprland"};

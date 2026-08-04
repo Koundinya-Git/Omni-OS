@@ -1,204 +1,122 @@
 #!/usr/bin/env python3
-import os
-import sys
-import subprocess
-import json
-import urllib.request
+import os, sys, subprocess, json, urllib.request
 from pathlib import Path
-
 try:
     from prompt_toolkit import PromptSession, prompt
     from prompt_toolkit.styles import Style
     from prompt_toolkit.shortcuts import radiolist_dialog
-    has_pt = True
+    h_pt = True
 except ImportError:
-    has_pt = False
-
-style = Style.from_dict({
-    'prompt': 'ansicyan bold',
-    'path': 'ansimagenta bold',
-})
-
-def get_config():
-    config_path = Path.home() / '.config' / 'omni' / 'shell.json'
-    default_config = {"format_outputs": False}
-    if config_path.exists():
+    h_pt = False
+st = Style.from_dict({'prompt': 'ansicyan bold', 'path': 'ansimagenta bold'})
+def get_cfg():
+    p = Path.home() / '.config' / 'omni' / 'shell.json'
+    cfg = {"format_outputs": False}
+    if p.exists():
         try:
-            with open(config_path, 'r') as f:
-                return {**default_config, **json.load(f)}
-        except json.JSONDecodeError:
-            pass
-    return default_config
-
-def query_ollama(prompt, system_prompt):
-    url = "http://localhost:11434/api/generate"
-    data = {
-        "model": "llama3.2:8b",
-        "prompt": prompt,
-        "system": system_prompt,
-        "stream": False
-    }
+            with open(p, 'r') as f:
+                return {**cfg, **json.load(f)}
+        except json.JSONDecodeError: pass
+    return cfg
+def q_ollama(pmt, sys_p):
+    u = "http://localhost:11434/api/generate"
+    d = {"model": "llama3.2:8b", "prompt": pmt, "system": sys_p, "stream": False}
     try:
-        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers={'Content-Type': 'application/json'})
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            return result.get("response", "").strip()
+        req = urllib.request.Request(u, data=json.dumps(d).encode('utf-8'), headers={'Content-Type': 'application/json'})
+        with urllib.request.urlopen(req) as res:
+            return json.loads(res.read().decode('utf-8')).get("response", "").strip()
     except Exception as e:
         print(f"\n[!] Error contacting Ollama: {e}\n")
         return None
-
-def get_context():
-    ctx = ""
+def get_ctx():
+    c = ""
     try:
-        wl_paste = subprocess.run(['wl-paste'], capture_output=True, text=True, timeout=1)
-        if wl_paste.returncode == 0 and wl_paste.stdout.strip():
-            ctx += f"\nClipboard contents:\n{wl_paste.stdout.strip()[:500]}\n"
-    except Exception:
-        pass
+        w = subprocess.run(['wl-paste'], capture_output=True, text=True, timeout=1)
+        if w.returncode == 0 and w.stdout.strip(): c += f"\nClipboard:\n{w.stdout.strip()[:500]}\n"
+    except Exception: pass
     try:
-        ls_out = subprocess.run(['ls', '-la'], capture_output=True, text=True, timeout=1)
-        if ls_out.returncode == 0:
-            ctx += f"\nCurrent directory contents:\n{ls_out.stdout.strip()[:1000]}\n"
-    except Exception:
-        pass
-    return ctx
-
-def run_command_with_autofix(cmd, config):
+        ls = subprocess.run(['ls', '-la'], capture_output=True, text=True, timeout=1)
+        if ls.returncode == 0: c += f"\nDir contents:\n{ls.stdout.strip()[:1000]}\n"
+    except Exception: pass
+    return c
+def run_fix(cmd, cfg):
     while True:
-        res = subprocess.run(cmd, shell=True, text=True, capture_output=True)
-        if res.returncode == 0:
-            if config.get("format_outputs", False):
-                sys_prompt = "You are an AI assistant formatting terminal output. Summarize the output clearly and concisely."
-                formatted = query_ollama(res.stdout, sys_prompt)
-                if formatted:
-                    print(formatted)
-                else:
-                    print(res.stdout)
+        r = subprocess.run(cmd, shell=True, text=True, capture_output=True)
+        if r.returncode == 0:
+            if cfg.get("format_outputs", False):
+                fmt = q_ollama(r.stdout, "You are an AI formatting terminal output. Summarize clearly.")
+                print(fmt if fmt else r.stdout)
             else:
-                sys.stdout.write(res.stdout)
+                sys.stdout.write(r.stdout)
             break
+        sys.stderr.write(r.stderr)
+        print(f"[\033[91mError\033[0m] Code {r.returncode}")
+        fx = q_ollama(f"Cmd: {cmd}\nErr:\n{r.stderr}", "You are a sysadmin. Provide exactly 3 separate bash commands to fix, separated by newlines. ONLY commands.")
+        if not fx: break
+        fl = [f.strip() for f in fx.strip().split('\n') if f.strip()]
+        if not fl: break
+        if h_pt:
+            ch = [(f, f) for f in fl] + [("manual", "Type manual fix..."), ("abort", "Abort")]
+            res = radiolist_dialog(title="Failed", text="Select fix:", values=ch).run()
+            if res in ("abort", None): break
+            if res == "manual":
+                cmd = prompt("Enter fix: ")
+                if not cmd: break
+            else: cmd = res
         else:
-            sys.stderr.write(res.stderr)
-            print(f"[\033[91mError\033[0m] Command failed with exit code {res.returncode}")
-            sys_prompt = "You are an expert Linux sysadmin. The user ran a command that failed. Provide exactly 3 separate bash commands that might fix the issue, separated by newlines. Provide ONLY the commands, no markdown, no explanations."
-            prompt_str = f"Command: {cmd}\nError:\n{res.stderr}"
-            fixes_raw = query_ollama(prompt_str, sys_prompt)
-            if not fixes_raw:
-                break
-            
-            fixes = [f.strip() for f in fixes_raw.strip().split('\n') if f.strip()]
-            if not fixes:
-                break
-            
-            if has_pt:
-                choices = [(f, f) for f in fixes]
-                choices.append(("manual", "Type manual fix..."))
-                choices.append(("abort", "Abort"))
-                
-                result = radiolist_dialog(
-                    title="Command Failed",
-                    text="Select a fix to apply:",
-                    values=choices
-                ).run()
-                
-                if result == "abort" or not result:
-                    break
-                elif result == "manual":
-                    cmd = prompt("Enter fix: ")
-                    if not cmd:
-                        break
-                else:
-                    cmd = result
-            else:
-                for i, f in enumerate(fixes):
-                    print(f"{i+1}) {f}")
-                print("m) Manual input")
-                print("q) Abort")
-                choice = input("Select option: ").strip()
-                if choice == 'q':
-                    break
-                elif choice == 'm':
-                    cmd = input("Enter fix: ").strip()
-                    if not cmd:
-                        break
-                elif choice.isdigit() and 1 <= int(choice) <= len(fixes):
-                    cmd = fixes[int(choice)-1]
-                else:
-                    break
-
+            for i, f in enumerate(fl): print(f"{i+1}) {f}")
+            print("m) Manual input\nq) Abort")
+            c = input("Select option: ").strip()
+            if c == 'q': break
+            if c == 'm':
+                cmd = input("Enter fix: ").strip()
+                if not cmd: break
+            elif c.isdigit() and 1 <= int(c) <= len(fl):
+                cmd = fl[int(c)-1]
+            else: break
 def main():
-    if has_pt:
-        session = PromptSession()
-    else:
-        print("Warning: python-prompt_toolkit not found. Using fallback shell.")
-
-    config = get_config()
-
+    if h_pt: sess = PromptSession()
+    else: print("Warning: prompt_toolkit not found.")
+    cfg = get_cfg()
     while True:
         try:
             cwd = os.getcwd()
-            
-            if has_pt:
-                user_input = session.prompt([
-                    ('class:prompt', 'omni-shell '),
-                    ('class:path', f'{cwd} '),
-                    ('class:prompt', '❯ ')
-                ], style=style)
+            if h_pt:
+                u = sess.prompt([('class:prompt', 'omni-shell '), ('class:path', f'{cwd} '), ('class:prompt', '❯ ')], style=st)
             else:
-                user_input = input(f"omni-shell {cwd} ❯ ")
-
-            user_input = user_input.strip()
-            if not user_input:
+                u = input(f"omni-shell {cwd} ❯ ")
+            u = u.strip()
+            if not u: continue
+            if u in ("exit", "quit"): break
+            if u.startswith("cd "):
+                t = os.path.expanduser(u.split(" ", 1)[1].strip())
+                try: os.chdir(t)
+                except FileNotFoundError: print(f"cd: no such file or directory: {t}")
                 continue
-
-            if user_input in ["exit", "quit"]:
-                break
-                
-            if user_input.startswith("cd "):
-                target = user_input.split(" ", 1)[1].strip()
-                target = os.path.expanduser(target)
-                try:
-                    os.chdir(target)
-                except FileNotFoundError:
-                    print(f"cd: no such file or directory: {target}")
-                continue
-
-            is_auto = user_input.startswith("##") and user_input.endswith("##")
-            is_safe = user_input.startswith("#") and not is_auto
-            
-            if is_auto or is_safe:
-                nl_prompt = user_input.strip('#').strip()
-                use_context = False
-                
-                if nl_prompt.startswith("--context "):
-                    use_context = True
-                    nl_prompt = nl_prompt[10:].strip()
-                
-                sys_prompt = "You are a Linux shell command generator. Translate the natural language request into a single valid Bash command. Do not explain. Do not use backticks. Output ONLY the raw bash command."
-                
-                if use_context:
-                    sys_prompt += get_context()
-
-                print(f"[\033[96mAI\033[0m] Translating...")
-                cmd = query_ollama(nl_prompt, sys_prompt)
-                
+            auto = u.startswith("##") and u.endswith("##")
+            safe = u.startswith("#") and not auto
+            if auto or safe:
+                n = u.strip('#').strip()
+                ctx = False
+                if n.startswith("--context "):
+                    ctx = True
+                    n = n[10:].strip()
+                sp = "Translate natural language to a single valid Bash command. No explanation, no backticks."
+                if ctx: sp += get_ctx()
+                print("[\033[96mAI\033[0m] Translating...")
+                cmd = q_ollama(n, sp)
                 if cmd:
-                    if is_safe:
-                        print(f"[\033[93mProposed Command\033[0m] {cmd}")
-                        confirm = input("Execute this command? [Y/n]: ").strip().lower()
-                        if confirm not in ["", "y", "yes"]:
+                    if safe:
+                        print(f"[\033[93mProposed\033[0m] {cmd}")
+                        c = input("Execute? [Y/n]: ").strip().lower()
+                        if c not in ("", "y", "yes"):
                             print("Aborted.")
                             continue
-                    
                     print(f"[\033[95mExecuting\033[0m] {cmd}")
-                    run_command_with_autofix(cmd, config)
+                    run_fix(cmd, cfg)
             else:
-                run_command_with_autofix(user_input, config)
-
-        except KeyboardInterrupt:
-            continue
-        except EOFError:
-            break
-
+                run_fix(u, cfg)
+        except KeyboardInterrupt: continue
+        except EOFError: break
 if __name__ == "__main__":
     main()

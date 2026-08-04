@@ -1,48 +1,35 @@
 #!/usr/bin/env bash
-# omni-observer-daemon - Telemetry gathering
-
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
-
-DB_DIR="$HOME/.local/share/omni"
-DB_FILE="$DB_DIR/telemetry.db"
-mkdir -p "$DB_DIR"
-
-sqlite3 "$DB_FILE" "CREATE TABLE IF NOT EXISTS telemetry_log(id INTEGER PRIMARY KEY, timestamp INTEGER, app_name TEXT, window_title TEXT, category TEXT, duration_seconds INTEGER);"
-
-PROD_APPS="kitty code obsidian libreoffice zathura evince anki kicad blender gimp krita octave jupyter"
-DIST_APPS="discord telegram-desktop slack"
-
-last_app=""
-last_title=""
-start_time=$(date +%s)
-
+db_dir="$HOME/.local/share/omni"
+db="$db_dir/telemetry.db"
+mkdir -p "$db_dir"
+sqlite3 "$db" "CREATE TABLE IF NOT EXISTS telemetry_log(id INTEGER PRIMARY KEY, timestamp INTEGER, app_name TEXT, window_title TEXT, category TEXT, duration_seconds INTEGER);"
+prod="kitty code obsidian libreoffice zathura evince anki kicad blender gimp krita octave jupyter"
+dist="discord telegram-desktop slack"
+l_app=""
+l_title=""
+t_start=$(date +%s)
 while true; do
-    active_window=$(hyprctl activewindow -j 2>/dev/null)
-    if [ -n "$active_window" ] && [ "$active_window" != "{}" ]; then
-        app_name=$(echo "$active_window" | jq -r '.class')
-        title=$(echo "$active_window" | jq -r '.title')
-        
-        category="Neutral"
-        if echo "$PROD_APPS" | grep -wq "$app_name"; then
-            category="Deep Work"
-        elif echo "$DIST_APPS" | grep -wq "$app_name"; then
-            category="Distraction"
-        elif [[ "$app_name" =~ (firefox|chromium) ]] && [[ "$title" =~ (Twitter|X|Reddit|Facebook|Instagram|YouTube) ]]; then
-            category="Distraction"
+    win=$(hyprctl activewindow -j 2>/dev/null)
+    if [ -n "$win" ] && [ "$win" != "{}" ]; then
+        app=$(echo "$win" | jq -r '.class')
+        title=$(echo "$win" | jq -r '.title')
+        cat="Neutral"
+        if echo "$prod" | grep -wq "$app"; then cat="Deep Work"
+        elif echo "$dist" | grep -wq "$app"; then cat="Distraction"
+        elif [[ "$app" =~ (firefox|chromium) ]] && [[ "$title" =~ (Twitter|X|Reddit|Facebook|Instagram|YouTube) ]]; then cat="Distraction"
         fi
-        
-        current_time=$(date +%s)
-        
-        if [ "$app_name" != "$last_app" ] || [ "$title" != "$last_title" ]; then
-            if [ -n "$last_app" ]; then
-                duration=$((current_time - start_time))
-                if [ $duration -gt 0 ]; then
-                    sqlite3 "$DB_FILE" "INSERT INTO telemetry_log (timestamp, app_name, window_title, category, duration_seconds) VALUES ($start_time, '$(echo "$last_app" | sed "s/'/''/g")', '$(echo "$last_title" | sed "s/'/''/g")', '$category', $duration);"
+        t_curr=$(date +%s)
+        if [ "$app" != "$l_app" ] || [ "$title" != "$l_title" ]; then
+            if [ -n "$l_app" ]; then
+                dur=$((t_curr - t_start))
+                if [ $dur -gt 0 ]; then
+                    sqlite3 "$db" "INSERT INTO telemetry_log (timestamp, app_name, window_title, category, duration_seconds) VALUES ($t_start, '$(echo "$l_app" | sed "s/'/''/g")', '$(echo "$l_title" | sed "s/'/''/g")', '$cat', $dur);"
                 fi
             fi
-            last_app="$app_name"
-            last_title="$title"
-            start_time=$current_time
+            l_app="$app"
+            l_title="$title"
+            t_start=$t_curr
         fi
     fi
     sleep 10

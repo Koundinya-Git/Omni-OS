@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
-
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
-
-prompt=$(rofi -dmenu -p "Describe your theme vibe (e.g. Cyberpunk neon, Tokyo Night):")
-if [ -z "$prompt" ]; then exit 0; fi
-
-notify-send "Omni AI" "Generating custom theme: $prompt..."
-
-SYSTEM_PROMPT="You are an expert UI designer. The user will describe a theme vibe. Your job is to output a raw JSON object containing the exact hex colors and font. Do NOT output any other text or markdown.
+p=$(rofi -dmenu -p "Describe your theme vibe (e.g. Cyberpunk neon, Tokyo Night):")
+[ -z "$p" ] && exit 0
+notify-send "Omni AI" "Generating custom theme: $p..."
+sys="You are an expert UI designer. The user will describe a theme vibe. Your job is to output a raw JSON object containing the exact hex colors and font. Do NOT output any other text or markdown.
 Format:
 {
   \"bg\": \"#hex\",
@@ -17,35 +13,29 @@ Format:
   \"font\": \"font-name\"
 }
 Example: {\"bg\": \"#1a1b26\", \"fg\": \"#c0caf5\", \"accent1\": \"#7aa2f7\", \"accent2\": \"#f7768e\", \"font\": \"JetBrainsMono Nerd Font\"}"
-
-response=$(curl -s -X POST http://localhost:11434/api/generate -d "{\"model\": \"llama3.2:1b\", \"prompt\": \"$SYSTEM_PROMPT\nUser Request: $prompt\", \"stream\": false}" | jq -r '.response')
-
-bg=$(echo "$response" | jq -r '.bg' || echo "#0d0f18")
-fg=$(echo "$response" | jq -r '.fg' || echo "#c0caf5")
-accent1=$(echo "$response" | jq -r '.accent1' || echo "#00ffff")
-accent2=$(echo "$response" | jq -r '.accent2' || echo "#ff00ff")
-font=$(echo "$response" | jq -r '.font' || echo "JetBrainsMono Nerd Font")
-
-sed -i "s/col.active_border = .*/col.active_border = rgba($(echo $accent1 | sed 's/#//')ff) rgba($(echo $accent2 | sed 's/#//')ff) 45deg/" ~/.config/hypr/hyprland.conf
-sed -i "s/col.inactive_border = .*/col.inactive_border = rgba($(echo $bg | sed 's/#//')aa)/" ~/.config/hypr/hyprland.conf
-
+res=$(curl -s -X POST http://localhost:11434/api/generate -d "{\"model\": \"llama3.2:1b\", \"prompt\": \"$sys\nUser Request: $p\", \"stream\": false}" | jq -r '.response')
+bg=$(echo "$res" | jq -r '.bg // "#0d0f18"')
+fg=$(echo "$res" | jq -r '.fg // "#c0caf5"')
+a1=$(echo "$res" | jq -r '.accent1 // "#00ffff"')
+a2=$(echo "$res" | jq -r '.accent2 // "#ff00ff"')
+f=$(echo "$res" | jq -r '.font // "JetBrainsMono Nerd Font"')
+sed -i "s/col.active_border = .*/col.active_border = rgba(${a1//#/}ff) rgba(${a2//#/}ff) 45deg/" ~/.config/hypr/hyprland.conf
+sed -i "s/col.inactive_border = .*/col.inactive_border = rgba(${bg//#/}aa)/" ~/.config/hypr/hyprland.conf
 cat <<EOF > ~/.config/waybar/colors.css
 @define-color bg $bg;
 @define-color fg $fg;
-@define-color accent1 $accent1;
-@define-color accent2 $accent2;
+@define-color accent1 $a1;
+@define-color accent2 $a2;
 EOF
-
 cat <<EOF > ~/.config/kitty/theme.conf
 background $bg
 foreground $fg
-selection_background $accent1
+selection_background $a1
 selection_foreground $bg
-color1 $accent2
-color2 $accent1
+color1 $a2
+color2 $a1
 EOF
-echo "include theme.conf" >> ~/.config/kitty/kitty.conf
-
+grep -q "^include theme.conf" ~/.config/kitty/kitty.conf || echo "include theme.conf" >> ~/.config/kitty/kitty.conf
 hyprctl reload
 killall waybar; waybar &
 notify-send "Omni AI" "Theme applied successfully!"

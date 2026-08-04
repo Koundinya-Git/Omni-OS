@@ -3,7 +3,6 @@ use chrono::{Local, Datelike, Timelike, TimeZone};
 use std::{collections::HashMap, process::Command, fs, path::Path, thread, time::Duration};
 
 fn get_total_ram_gb() -> f64 {
-    // Read from meminfo; fallback to 8GB if we can't parse it
     if let Ok(content) = fs::read_to_string("/proc/meminfo") {
         for line in content.lines() {
             if line.starts_with("MemTotal:") {
@@ -46,7 +45,6 @@ fn get_predicted_apps(db_path: &str, limit: usize) -> Vec<String> {
             if app.is_empty() || app == "null" {
                 continue;
             }
-            // Group by Day of Week and roughly the same hour
             if let Some(dt) = Local.timestamp_opt(ts, 0).single() {
                 if dt.weekday().number_from_monday() == current_dow && (dt.hour() as i32 - current_hour as i32).abs() <= 1 {
                     *freq.entry(app).or_insert(0) += 1;
@@ -68,7 +66,6 @@ fn vmtouch_target(path: &str) {
 }
 
 fn precache_app(app_name: &str, deep_cache: bool) {
-    // Find the binary
     if let Ok(out) = Command::new("which").arg(&app_name.to_lowercase()).output() {
         if out.status.success() {
             let bin = String::from_utf8_lossy(&out.stdout).trim().to_string();
@@ -76,7 +73,6 @@ fn precache_app(app_name: &str, deep_cache: bool) {
         }
     }
 
-    // Optionally cache configs/data for ultra-fast loading
     if deep_cache {
         if let Some(home) = std::env::var_os("HOME") {
             let home_str = home.to_string_lossy();
@@ -97,7 +93,6 @@ fn main() {
     
     let ram_gb = get_total_ram_gb();
     
-    // Scale how many apps we cache based on hardware
     let (limit, deep) = if ram_gb < 8.0 {
         (2, false)
     } else if ram_gb < 32.0 {
@@ -114,7 +109,6 @@ fn main() {
                 precache_app(&app, deep);
             }
         }
-        // Poll every 30 minutes
         thread::sleep(Duration::from_secs(1800));
     }
 }

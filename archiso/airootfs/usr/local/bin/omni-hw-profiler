@@ -1,75 +1,56 @@
 #!/usr/bin/env bash
-# omni-hw-profiler - Calculates system hardware tier (1-20)
-
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
-
 mkdir -p /etc/omni
-
-# RAM calculation (0-6 points)
-total_ram_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
-total_ram_mb=$((total_ram_kb / 1024))
-ram_points=0
-if [ "$total_ram_mb" -gt 64000 ]; then ram_points=6;
-elif [ "$total_ram_mb" -gt 32000 ]; then ram_points=4;
-elif [ "$total_ram_mb" -gt 16000 ]; then ram_points=2;
-elif [ "$total_ram_mb" -gt 8000 ]; then ram_points=1; fi
-
-# CPU calculation (0-4 points)
-cpu_threads=$(nproc)
-cpu_points=0
-if [ "$cpu_threads" -gt 16 ]; then cpu_points=4;
-elif [ "$cpu_threads" -gt 8 ]; then cpu_points=2;
-elif [ "$cpu_threads" -gt 4 ]; then cpu_points=1; fi
-
-# Storage calculation (0-2 points)
-storage_points=0
-if lsblk -d -o name | grep -q "^nvme"; then storage_points=2;
-elif lsblk -d -o name | grep -q "^sda"; then storage_points=1; fi
-
-# GPU VRAM and Compute calculation (0-6 VRAM, 0-2 Compute)
-gpu_vram_mb=0
-gpu_type="unknown"
-vram_points=0
-compute_points=0
-
+rmb=$(( $(awk '/MemTotal/ {print $2}' /proc/meminfo) / 1024 ))
+pr=0
+if [ "$rmb" -gt 64000 ]; then pr=6
+elif [ "$rmb" -gt 32000 ]; then pr=4
+elif [ "$rmb" -gt 16000 ]; then pr=2
+elif [ "$rmb" -gt 8000 ]; then pr=1; fi
+cpu=$(nproc)
+pc=0
+if [ "$cpu" -gt 16 ]; then pc=4
+elif [ "$cpu" -gt 8 ]; then pc=2
+elif [ "$cpu" -gt 4 ]; then pc=1; fi
+ps=0
+if lsblk -d -o name | grep -q "^nvme"; then ps=2
+elif lsblk -d -o name | grep -q "^sda"; then ps=1; fi
+vmb=0
+g_t="unknown"
+pv=0
+pg=0
 if command -v nvidia-smi >/dev/null 2>&1; then
-    gpu_type="nvidia"
-    gpu_vram_mb=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits | head -n 1 | awk '{print $1}')
-    compute_points=2
+    g_t="nvidia"
+    vmb=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits | head -n 1 | awk '{print $1}')
+    pg=2
 elif lspci | grep -i "vga" | grep -iq "amd"; then
-    gpu_type="amd"
+    g_t="amd"
     if [ -d "/sys/class/drm/card0/device" ]; then
-        vram_bytes=$(cat /sys/class/drm/card0/device/mem_info_vram_total 2>/dev/null || echo 0)
-        gpu_vram_mb=$((vram_bytes / 1048576))
+        v_b=$(cat /sys/class/drm/card0/device/mem_info_vram_total 2>/dev/null || echo 0)
+        vmb=$((v_b / 1048576))
     fi
-    compute_points=2
+    pg=2
 elif lspci | grep -i "vga" | grep -iq "intel"; then
-    gpu_type="intel"
-    gpu_vram_mb=$((total_ram_mb / 4)) # shared memory
-    compute_points=1
+    g_t="intel"
+    vmb=$((rmb / 4))
+    pg=1
 fi
-
-if [ -z "$gpu_vram_mb" ]; then gpu_vram_mb=0; fi
-
-if [ "$gpu_vram_mb" -gt 24000 ]; then vram_points=6;
-elif [ "$gpu_vram_mb" -gt 16000 ]; then vram_points=4;
-elif [ "$gpu_vram_mb" -gt 8000 ]; then vram_points=2;
-elif [ "$gpu_vram_mb" -gt 4000 ]; then vram_points=1; fi
-
-tier=$((ram_points + cpu_points + storage_points + vram_points + compute_points))
-if [ "$tier" -lt 1 ]; then tier=1; fi
-if [ "$tier" -gt 20 ]; then tier=20; fi
-
+[ -z "$vmb" ] && vmb=0
+if [ "$vmb" -gt 24000 ]; then pv=6
+elif [ "$vmb" -gt 16000 ]; then pv=4
+elif [ "$vmb" -gt 8000 ]; then pv=2
+elif [ "$vmb" -gt 4000 ]; then pv=1; fi
+tier=$((pr + pc + ps + pv + pg))
+[ "$tier" -lt 1 ] && tier=1
+[ "$tier" -gt 20 ] && tier=20
 echo "OMNI_TIER=$tier" > /etc/omni/hw-tier
-
 cat <<EOF > /etc/omni/hw-profile.json
 {
-  "total_ram_mb": $total_ram_mb,
-  "cpu_threads": $cpu_threads,
-  "gpu_type": "$gpu_type",
-  "gpu_vram_mb": $gpu_vram_mb,
+  "total_ram_mb": $rmb,
+  "cpu_threads": $cpu,
+  "gpu_type": "$g_t",
+  "gpu_vram_mb": $vmb,
   "calculated_tier": $tier
 }
 EOF
-
-logger -t omni-hw-profiler "Hardware profiling complete: Tier $tier (RAM: ${total_ram_mb}MB, CPU: $cpu_threads threads, GPU: $gpu_type, VRAM: ${gpu_vram_mb}MB)"
+logger -t omni-hw-profiler "Hardware profiling complete: Tier $tier (RAM: ${rmb}MB, CPU: $cpu threads, GPU: $g_t, VRAM: ${vmb}MB)"

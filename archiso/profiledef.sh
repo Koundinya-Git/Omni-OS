@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2034
 
 iso_name="omni-os"
 iso_label="OMNI_OS"

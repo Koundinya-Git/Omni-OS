@@ -1,28 +1,23 @@
 #!/usr/bin/env bash
-# omni-vram-manager - AI VRAM release daemon
-
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
-
-HEAVY_APPS="steam gamescope blender kdenlive"
-ai_stopped=0
-
+apps="steam gamescope blender kdenlive"
+ai_off=0
 while true; do
-    app_running=0
-    for app in $HEAVY_APPS; do
-        if pgrep -x "$app" >/dev/null; then
-            app_running=1
+    app_on=0
+    for a in $apps; do
+        if pgrep -x "$a" >/dev/null; then
+            app_on=1
             break
         fi
     done
-    
-    if [ $app_running -eq 1 ] && [ $ai_stopped -eq 0 ]; then
-        logger -t omni-vram-manager "Heavy GPU app detected. Stopping Ollama."
+    if [ $app_on -eq 1 ] && [ $ai_off -eq 0 ]; then
+        logger -t omni-vram-manager "Heavy app detected. Stopping Ollama."
         systemctl stop ollama.service || systemctl --user stop ollama.service
-        ai_stopped=1
-    elif [ $app_running -eq 0 ] && [ $ai_stopped -eq 1 ]; then
-        logger -t omni-vram-manager "Heavy GPU app exited. Restarting Ollama."
+        ai_off=1
+    elif [ $app_on -eq 0 ] && [ $ai_off -eq 1 ]; then
+        logger -t omni-vram-manager "Heavy app exited. Restarting Ollama."
         systemctl start ollama.service || systemctl --user start ollama.service
-        ai_stopped=0
+        ai_off=0
     fi
     sleep 5
 done

@@ -1,1 +1,3 @@
-#!/bin/bash`nsudo cp -r /etc/omni-installer-config/* /etc/calamares/`nsudo calamares
+#!/bin/bash
+sudo cp -r /etc/omni-installer-config/* /etc/calamares/
+sudo calamares

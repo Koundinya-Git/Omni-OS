@@ -1,11 +1,9 @@
 [Unit]
 Description=Omni-OS Hardware Profiler
 Before=omni-neural-setup.service omni-recall-daemon.service
-
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/omni-hw-profiler
 RemainAfterExit=yes
-
 [Install]
 WantedBy=multi-user.target

@@ -8,11 +8,8 @@ OUT_DIR="${SCRIPT_DIR}/out"
 ISO_FILE=$(ls -1 "$OUT_DIR"/omni-os-*.iso | head -n 1)
 
 if [ -z "$ISO_FILE" ]; then
-    echo "No ISO found in $OUT_DIR. Run build.sh first."
     exit 1
 fi
-
-echo "Running $ISO_FILE in QEMU..."
 
 qemu-system-x86_64 \
     -m 4096 \

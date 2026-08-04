@@ -1,52 +1,68 @@
 # Plymouth script for Omni-OS
 
-# Dark glassmorphic, Tokyo Night inspired bg
-Window.SetBackgroundTopColor(0.10196, 0.10588, 0.14902);    # #1a1b26
-Window.SetBackgroundBottomColor(0.10196, 0.10588, 0.14902); # #1a1b26
+# Deep Black Background
+Window.SetBackgroundTopColor(0.02, 0.02, 0.02);
+Window.SetBackgroundBottomColor(0.02, 0.02, 0.02);
 
-# Center Omni-OS Text
-logo.image = Image.Text("OMNI-OS", 1.0, 1.0, 1.0, 1.0, "Sans 36");
+# Omni-OS Uploaded Glowing Logo
+logo.image = Image("logo.png");
 logo.sprite = Sprite(logo.image);
 logo.sprite.SetX(Window.GetWidth() / 2 - logo.image.GetWidth() / 2);
 logo.sprite.SetY(Window.GetHeight() / 2 - logo.image.GetHeight() / 2);
+logo.sprite.SetZ(100);
 
-# Elegant loading spinner (cyan #7dcfff)
-spinner.image = Image.Text("|", 0.4902, 0.81176, 1.0, 1.0, "Sans 24");
-spinner.sprite = Sprite(spinner.image);
-spinner.sprite.SetX(Window.GetWidth() / 2 - spinner.image.GetWidth() / 2);
-spinner.sprite.SetY(Window.GetHeight() / 2 + logo.image.GetHeight() + 30);
+# Rocket Streaks
+streak_image = Image.Text("|", 0.0, 0.898, 1.0, 0.8, "Sans 40");
+NUM_STREAKS = 20;
 
-spinner_angle = 0;
-fun refresh_callback () {
-    spinner_angle += 0.1;
-    spinner.sprite.SetImage(spinner.image.Rotate(spinner_angle));
+i = 0;
+while (i < NUM_STREAKS) {
+    streaks[i].sprite = Sprite(streak_image);
+    streaks[i].x = Math.Random() * Window.GetWidth();
+    streaks[i].y = Math.Random() * Window.GetHeight();
+    streaks[i].speed = 5 + (Math.Random() * 10);
+    streaks[i].sprite.SetX(streaks[i].x);
+    streaks[i].sprite.SetY(streaks[i].y);
+    streaks[i].sprite.SetZ(1);
+    i++;
 }
+
+fun refresh_callback () {
+    i = 0;
+    while (i < NUM_STREAKS) {
+        streaks[i].y += streaks[i].speed;
+        if (streaks[i].y > Window.GetHeight()) {
+            streaks[i].y = -100;
+            streaks[i].x = Math.Random() * Window.GetWidth();
+            streaks[i].speed = 5 + (Math.Random() * 10);
+        }
+        streaks[i].sprite.SetY(streaks[i].y);
+        streaks[i].sprite.SetX(streaks[i].x);
+        i++;
+    }
+}
+
 Plymouth.SetRefreshFunction(refresh_callback);
 
-# Boot messages
-message_sprite = Sprite();
-message_sprite.SetPosition(Window.GetWidth() / 2, Window.GetHeight() / 2 + 100, 10000);
-
+# Hide default boot messages for clean cinematic look
 fun display_message_callback (text) {
-    my_image = Image.Text(text, 1.0, 1.0, 1.0, 1.0, "Sans 12");
-    message_sprite.SetImage(my_image);
-    message_sprite.SetX(Window.GetWidth() / 2 - my_image.GetWidth() / 2);
 }
 Plymouth.SetDisplayMessageFunction(display_message_callback);
 Plymouth.SetUpdateStatusFunction(display_message_callback);
 
-# LUKS / Password Prompt
+# LUKS / Disk Encryption Password Prompt
 password_prompt_sprite = Sprite();
-password_prompt_sprite.SetPosition(Window.GetWidth() / 2, Window.GetHeight() / 2 + 140, 10000);
+password_prompt_sprite.SetPosition(Window.GetWidth() / 2, Window.GetHeight() / 2 + 140, 200);
 
 fun display_password_callback (prompt, bullets) {
     bullet_string = "";
-    for (i = 0; i < bullets; i++) {
-        bullet_string += "•";
+    b = 0;
+    while (b < bullets) {
+        bullet_string += "●";
+        b++;
     }
     text = prompt + " " + bullet_string;
-    # Magenta accent #bb9af7
-    my_image = Image.Text(text, 0.7333, 0.6039, 0.9686, 1.0, "Sans 12"); 
+    my_image = Image.Text(text, 0.0, 0.898, 1.0, 1.0, "Sans 16");
     password_prompt_sprite.SetImage(my_image);
     password_prompt_sprite.SetX(Window.GetWidth() / 2 - my_image.GetWidth() / 2);
 }
@@ -57,8 +73,3 @@ fun display_normal_callback () {
 }
 Plymouth.SetDisplayNormalFunction(display_normal_callback);
 
-# Progress Callback
-fun boot_progress_callback (duration, progress) {
-    # Could expand with a progress bar, but minimal spinner is requested
-}
-Plymouth.SetBootProgressFunction(boot_progress_callback);

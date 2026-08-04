@@ -1,46 +1,32 @@
 #!/opt/omni-venv/bin/python
-import sys
-import os
-import json
-import chromadb
+import sys, os, json, logging, chromadb
 from chromadb.utils import embedding_functions
-
 def main():
     if len(sys.argv) < 2:
         print(json.dumps({"error": "Missing query"}))
         sys.exit(1)
-        
-    query = " ".join(sys.argv[1:])
-    chroma_path = os.path.expanduser("~/.local/share/omni/chroma")
-    
-    if not os.path.exists(chroma_path):
+    q = " ".join(sys.argv[1:])
+    p = os.path.expanduser("~/.local/share/omni/chroma")
+    if not os.path.exists(p):
         print(json.dumps({"error": "No chroma database found."}))
         sys.exit(1)
-        
-    import logging
     logging.getLogger("chromadb").setLevel(logging.ERROR)
-        
-    client = chromadb.PersistentClient(path=chroma_path)
+    cl = chromadb.PersistentClient(path=p)
     ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
-    
     try:
-        collection = client.get_collection(name="recall_frames", embedding_function=ef)
-    except ValueError:
+        col = cl.get_collection(name="recall_frames", embedding_function=ef)
+    except:
         print(json.dumps({"error": "Collection not found"}))
         sys.exit(1)
-        
-    results = collection.query(
-        query_texts=[query],
-        n_results=1
-    )
-    
-    if results['distances'][0] and results['distances'][0][0] < 1.0:
-        meta = results['metadatas'][0][0]
-        doc = results['documents'][0][0]
-        dist = results['distances'][0][0]
-        print(json.dumps({"match": True, "path": meta.get('path'), "distance": dist, "text": doc}))
+    res = col.query(query_texts=[q], n_results=1)
+    if res['distances'][0] and res['distances'][0][0] < 1.0:
+        print(json.dumps({
+            "match": True, 
+            "path": res['metadatas'][0][0].get('path'), 
+            "distance": res['distances'][0][0], 
+            "text": res['documents'][0][0]
+        }))
     else:
         print(json.dumps({"match": False}))
-
 if __name__ == "__main__":
     main()

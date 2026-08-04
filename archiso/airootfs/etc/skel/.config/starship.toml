@@ -1,4 +1,3 @@
-# Minimal Sleek Starship Prompt
 format = """
 $directory\
 $git_branch\

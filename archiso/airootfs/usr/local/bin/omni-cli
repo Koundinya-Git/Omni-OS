@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
-
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
-
 case "$1" in
     status)
         source /etc/omni/hw-tier
         echo "Omni-OS Status:"
         echo "Hardware Tier: $OMNI_TIER"
-        echo "Ollama Status: $(systemctl is-active ollama.service 2>/dev/null || echo 'inactive')"
-        echo "Observer Daemon: $(systemctl --user is-active omni-observer.service 2>/dev/null || echo 'inactive')"
+        echo "Ollama: $(systemctl is-active ollama.service 2>/dev/null || echo 'inactive')"
+        echo "Observer: $(systemctl --user is-active omni-observer.service 2>/dev/null || echo 'inactive')"
         ;;
     ask)
         shift
@@ -25,6 +23,6 @@ case "$1" in
         cat /etc/omni/hw-tier
         ;;
     *)
-        echo "Usage: omni-cli {status|ask 'prompt'|recall 'search'|deep-work on/off|tier}"
+        echo "Usage: omni-cli {status|ask 'p'|recall 's'|deep-work on/off|tier}"
         ;;
 esac
