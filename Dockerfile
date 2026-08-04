@@ -40,10 +40,18 @@ RUN mkdir -p /build/src/omni-setup-engine/assets && \
     cmake .. && make && \
     cp omni-setup-engine /build/profile/airootfs/usr/local/bin/
 
+RUN pacman -S --noconfirm python python-pip && \
+    mkdir -p /build/profile/airootfs/opt/omni-venv && \
+    python3 -m venv /build/profile/airootfs/opt/omni-venv && \
+    /build/profile/airootfs/opt/omni-venv/bin/pip install --upgrade pip && \
+    /build/profile/airootfs/opt/omni-venv/bin/pip install chromadb sentence-transformers
+
 RUN chmod +x /build/profile/airootfs/usr/local/bin/*
 
 RUN ln -sf /usr/lib/systemd/system/greetd.service /build/profile/airootfs/etc/systemd/system/display-manager.service && \
-    rm -rf /build/profile/airootfs/etc/systemd/system/getty@tty1.service.d
+    rm -rf /build/profile/airootfs/etc/systemd/system/getty@tty1.service.d && \
+    ln -sf /usr/share/zoneinfo/UTC /build/profile/airootfs/etc/localtime && \
+    ln -sf /dev/null /build/profile/airootfs/etc/systemd/system/systemd-firstboot.service
 
 RUN pacman -S --noconfirm ollama && \
     export OLLAMA_MODELS=/build/profile/airootfs/var/lib/ollama/models && \

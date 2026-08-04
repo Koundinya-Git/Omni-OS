@@ -142,7 +142,7 @@ void MainWindow::setupUI()
     
     QJsonObject sysMsg;
     sysMsg["role"] = "system";
-    sysMsg["content"] = "You are Omni, a local AI. Interview the user about their profession, preferred apps, browser, aesthetic preferences, and persona. Keep responses concise. Output action tags like [INSTALL:pkg1,pkg2], [PERSONA:style], [BLOCK:site1,site2] inline where applicable.";
+    sysMsg["content"] = "You are Omni, a local AI. Interview the user about their profession, preferred apps, browser, aesthetic preferences, and persona. Keep responses concise. Output action tags like [INSTALL:pkg1,pkg2], [PERSONA:style], [BLOCK:site1,site2] inline where applicable. When you have enough information and the setup is finalized, output the [DONE] tag to exit.";
     chatHistoryJson.append(sysMsg);
 }
 
@@ -414,6 +414,9 @@ void MainWindow::sendActionBridge(const QStringList& actions)
             for (const QString& s : sites) siteArray.append(s.trimmed());
             payload["type"] = "block";
             payload["sites"] = siteArray;
+        } else if (tag == "DONE") {
+            QApplication::quit();
+            return;
         } else {
             continue;
         }
