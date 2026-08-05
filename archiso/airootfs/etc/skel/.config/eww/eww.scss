@@ -1,0 +1,97 @@
+/* eww.scss - Premium Glassmorphic Styling for Omni-OS */
+
+$bg-color: rgba(20, 20, 25, 0.6);
+$bg-color-hover: rgba(40, 40, 50, 0.7);
+$border-color: rgba(255, 255, 255, 0.1);
+$text-color: #f8f8f2;
+$accent-color: #bd93f9;
+$font-family: "Inter", "Roboto", "Ubuntu", sans-serif;
+
+* {
+  all: unset;
+  font-family: $font-family;
+  color: $text-color;
+}
+
+/* Base Glassmorphism utility */
+.glass {
+  background-color: $bg-color;
+  border: 1px solid $border-color;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* --------------------------------------------------------
+ * Top Bar
+ * -------------------------------------------------------- */
+.bar-container {
+  background-color: $bg-color;
+  border: 1px solid $border-color;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-radius: 20px;
+  padding: 0 16px;
+  margin: 0;
+}
+
+.module-group {
+  padding: 4px;
+}
+
+.placeholder-text {
+  font-weight: 700;
+  font-size: 16px;
+  color: $accent-color;
+  margin-right: 12px;
+}
+
+.time-module {
+  font-weight: 600;
+  font-size: 15px;
+  padding: 4px 12px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.control-center-btn {
+  font-weight: 600;
+  font-size: 14px;
+  padding: 6px 14px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  transition: 200ms background-color;
+}
+
+.control-center-btn:hover {
+  background-color: $bg-color-hover;
+  color: $accent-color;
+}
+
+/* --------------------------------------------------------
+ * Control Center
+ * -------------------------------------------------------- */
+.control-center-container {
+  background-color: $bg-color;
+  border: 1px solid $border-color;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  padding: 24px;
+  border-radius: 16px;
+}
+
+.header {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: $text-color;
+}
+
+.widgets-container {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 200px;
+}
+
+.placeholder-text-center {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.5);
+}

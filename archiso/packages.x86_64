@@ -6,6 +6,13 @@ edk2-shell
 memtest86+
 memtest86+-efi
 
+# Omni-OS Custom
+omni-cli
+omni-hw-profiler
+eww
+piper-tts
+whisper.cpp
+
 # Kernels
 linux-zen
 linux-zen-headers
@@ -14,6 +21,12 @@ linux-lts-headers
 linux
 linux-headers
 linux-firmware
+sof-firmware
+alsa-firmware
+broadcom-wl
+intel-ucode
+amd-ucode
+nvidia-dkms
 
 # Filesystem & Storage
 btrfs-progs
@@ -142,3 +155,8 @@ vulkan-intel
 nvidia
 nvidia-utils
 nvidia-settings
+vlc
+tesseract
+tesseract-data-eng
+qt6-wayland
+xdg-desktop-portal-gtk

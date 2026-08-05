@@ -7,7 +7,7 @@ iso_application="Omni-OS Live/Rescue CD"
 iso_version="1.0.0"
 install_dir="arch"
 buildmodes=('iso')
-bootmodes=('bios.syslinux' 'uefi.grub')
+bootmodes=('bios.syslinux.mbr' 'bios.syslinux.eltorito' 'uefi-x64.systemd-boot.esp' 'uefi-x64.systemd-boot.eltorito')
 initramfs_generator="mkinitcpio"
 pacman_conf="pacman.conf"
 

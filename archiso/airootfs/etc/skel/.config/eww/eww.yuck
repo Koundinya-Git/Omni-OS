@@ -1,0 +1,78 @@
+;; eww.yuck - Baseline Framework for Omni-OS
+
+;; Variables
+(defvar reveal_control_center false)
+(defvar system_theme "dark")
+
+;; --------------------------------------------------------
+;; Main Top Bar
+;; --------------------------------------------------------
+(defwindow bar
+  :monitor 0
+  :windowtype "dock"
+  :geometry (geometry :x "0%"
+                      :y "1%"
+                      :width "98%"
+                      :height "40px"
+                      :anchor "top center")
+  :exclusive true
+  :namespace "eww-bar"
+  (bar_layout))
+
+(defwidget bar_layout []
+  (centerbox :class "bar-container"
+    (left_modules)
+    (center_modules)
+    (right_modules)))
+
+(defwidget left_modules []
+  (box :class "module-group left" :space-evenly false :halign "start"
+    ;; LLM can inject workspace, launcher, etc. here
+    (label :class "placeholder-text" :text "Omni-OS")
+  ))
+
+(defwidget center_modules []
+  (box :class "module-group center" :space-evenly false :halign "center"
+    ;; LLM can inject clock, media player, etc. here
+    (time_module)
+  ))
+
+(defwidget right_modules []
+  (box :class "module-group right" :space-evenly false :halign "end"
+    ;; LLM can inject system tray, battery, network, etc. here
+    (button :class "control-center-btn" 
+            :onclick "eww update reveal_control_center=${!reveal_control_center}"
+            "󰒓 System")
+  ))
+
+;; Sample Module: Time
+(defpoll time :interval "10s" "date '+%H:%M'")
+(defwidget time_module []
+  (box :class "time-module"
+    (label :text time)))
+
+;; --------------------------------------------------------
+;; Control Center (Glassmorphic panel)
+;; --------------------------------------------------------
+(defwindow control_center
+  :monitor 0
+  :windowtype "normal"
+  :geometry (geometry :x "1%"
+                      :y "60px"
+                      :width "350px"
+                      :height "500px"
+                      :anchor "top right")
+  :namespace "eww-control-center"
+  (revealer :transition "slideleft" 
+            :reveal reveal_control_center 
+            :duration "300ms"
+    (control_center_layout)))
+
+(defwidget control_center_layout []
+  (box :class "control-center-container" :orientation "v" :space-evenly false
+    (label :class "header" :text "Control Center")
+    (box :class "widgets-container" :orientation "v" :space-evenly false
+      ;; LLM can inject detailed widgets here (sliders, toggles, graphs)
+      (label :class "placeholder-text-center" :text "Dynamic Widgets Inject Here")
+    )
+  ))

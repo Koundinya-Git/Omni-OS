@@ -2,18 +2,19 @@
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
 p=$(kitty --class scratchpad -e bash -c 'read -rp "Omni Action> " cmd; echo "$cmd"')
 [ -z "$p" ] && exit 0
-sys="Translate the following natural language request into a valid bash script. Output ONLY the bash script wrapped in \`\`\`bash ... \`\`\` blocks. If you need to inject keystrokes, include [WTYPE:text] in your output."
+
+mkdir -p ~/.config/eww
+sys="Translate the following natural language request into an eww configuration. Output ONLY the yuck file wrapped in \`\`\`yuck ... \`\`\` blocks, and the css file wrapped in \`\`\`css ... \`\`\` blocks. Define a main window named 'omni-widget'."
 res=$(curl -s -X POST http://localhost:11434/api/generate -d "{\"model\": \"llama3.2:1b\", \"prompt\": \"$sys\nUser Request: $p\", \"stream\": false}" | jq -r '.response')
-script=$(echo "$res" | awk '/^```bash/{f=1; next} /^```/{f=0} f')
-wtypes=$(echo "$res" | grep -o '\[WTYPE:[^]]*\]' | sed 's/\[WTYPE://;s/\]//' || true)
-if [ -n "$script" ]; then
-    echo -e "Proposed Action:\n$script\nExecute? (y/n)"
-    read -r c
-    if [ "$c" = "y" ]; then
-        echo "$script" > /tmp/omni-action.sh
-        bash -e /tmp/omni-action.sh
-    fi
-fi
-if [ -n "$wtypes" ]; then
-    for wt in $wtypes; do wtype "$wt"; done
+
+yuck=$(echo "$res" | awk '/^```yuck/{f=1; next} /^```/{f=0} f')
+css=$(echo "$res" | awk '/^```css/{f=1; next} /^```/{f=0} f')
+
+if [ -n "$yuck" ]; then
+    echo "$yuck" > ~/.config/eww/eww.yuck
+    echo "$css" > ~/.config/eww/eww.scss
+    
+    # Reload eww and open the dynamically generated widget
+    eww reload || true
+    eww open omni-widget
 fi

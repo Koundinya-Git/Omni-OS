@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
+
+content=$(wl-paste)
+if [ -z "$content" ]; then
+    exit 0
+fi
+
+sys="Provide a smart summary of the following clipboard context. Keep it concise, under 50 words."
+res=$(curl -s -X POST http://localhost:11434/api/generate -d "{\"model\": \"llama3.2:1b\", \"prompt\": \"$sys\nClipboard Content: $content\", \"stream\": false}" | jq -r '.response')
+
+notify-send "Smart Clipboard" "$res"

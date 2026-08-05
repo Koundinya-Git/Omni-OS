@@ -1,0 +1,13 @@
+[Unit]
+Description=Omni-Recall Background Daemon
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/omni-recall-backend
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

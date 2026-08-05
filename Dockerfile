@@ -1,13 +1,13 @@
 FROM archlinux:base-devel
 
 RUN pacman -Syu --noconfirm && \
-    pacman -S --noconfirm archiso git mtools dosfstools squashfs-tools libisoburn grub rust cargo cmake qt6-base qt6-multimedia qt6-networkauth perl && \
+    pacman -S --noconfirm archiso git mtools dosfstools squashfs-tools libisoburn grub rust cargo cmake qt6-base qt6-multimedia qt6-networkauth perl yt-dlp mpv alsa-utils curl && \
     pacman -Scc --noconfirm
 
 RUN useradd -m builder && echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 USER builder
 RUN git clone https://aur.archlinux.org/paru.git /tmp/paru && cd /tmp/paru && makepkg -sri --noconfirm
-RUN paru -S --noconfirm opera-gx catppuccin-gtk-theme-mocha
+RUN paru -S --noconfirm opera-gx catppuccin-gtk-theme-mocha whisper.cpp piper-tts-bin || true
 
 USER root
 RUN mkdir -p /customrepo && \
@@ -40,18 +40,46 @@ RUN mkdir -p /build/src/omni-setup-engine/assets && \
     cmake .. && make && \
     cp omni-setup-engine /build/profile/airootfs/usr/local/bin/
 
+RUN cd /build/src/omni-recall-backend && cargo build --release && \
+    cp target/release/omni-recall-backend /build/profile/airootfs/usr/local/bin/
+
+RUN cd /build/src/omni-medic-daemon && cargo build --release && \
+    cp target/release/omni-medic-daemon /build/profile/airootfs/usr/local/bin/
+
+RUN cd /build/src/omni-recall-ui && mkdir build && cd build && \
+    cmake .. && make && \
+    cp omni-recall-ui /build/profile/airootfs/usr/local/bin/
+
+RUN cd /build/src/omni-music-player && cargo build --release && \
+    cp target/release/omni-music-player /build/profile/airootfs/usr/local/bin/
+
+RUN cd /build/src/omni-voice-bridge && cargo build --release && \
+    cp target/release/omni-voice-bridge /build/profile/airootfs/usr/local/bin/
+
+RUN cd /build/src/omni-layout-daemon && cargo build --release && \
+    cp target/release/omni-layout-daemon /build/profile/airootfs/usr/local/bin/
+
+RUN mkdir -p /build/profile/airootfs/usr/share/whisper.cpp/models && \
+    curl -L -o /build/profile/airootfs/usr/share/whisper.cpp/models/ggml-base.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin && \
+    mkdir -p /build/profile/airootfs/usr/share/piper-voices && \
+    curl -L -o /build/profile/airootfs/usr/share/piper-voices/en_US-lessac-medium.onnx https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx && \
+    curl -L -o /build/profile/airootfs/usr/share/piper-voices/en_US-lessac-medium.onnx.json https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json
+
 RUN pacman -S --noconfirm python python-pip && \
     mkdir -p /build/profile/airootfs/opt/omni-venv && \
     python3 -m venv /build/profile/airootfs/opt/omni-venv && \
     /build/profile/airootfs/opt/omni-venv/bin/pip install --upgrade pip && \
-    /build/profile/airootfs/opt/omni-venv/bin/pip install chromadb sentence-transformers
+    /build/profile/airootfs/opt/omni-venv/bin/pip install chromadb sentence-transformers fastapi uvicorn pydantic && \
+    cp -r /build/src/omni-recall-api /build/profile/airootfs/opt/omni-recall-api
 
 RUN chmod +x /build/profile/airootfs/usr/local/bin/*
 
 RUN ln -sf /usr/lib/systemd/system/greetd.service /build/profile/airootfs/etc/systemd/system/display-manager.service && \
     rm -rf /build/profile/airootfs/etc/systemd/system/getty@tty1.service.d && \
     ln -sf /usr/share/zoneinfo/UTC /build/profile/airootfs/etc/localtime && \
-    ln -sf /dev/null /build/profile/airootfs/etc/systemd/system/systemd-firstboot.service
+    ln -sf /dev/null /build/profile/airootfs/etc/systemd/system/systemd-firstboot.service && \
+    mkdir -p /build/profile/airootfs/etc/systemd/system/multi-user.target.wants && \
+    ln -sf /etc/systemd/system/omni-medic.service /build/profile/airootfs/etc/systemd/system/multi-user.target.wants/omni-medic.service
 
 RUN pacman -S --noconfirm ollama && \
     export OLLAMA_MODELS=/build/profile/airootfs/var/lib/ollama/models && \
