@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include <QApplication>
 #include <QPainter>
 #include <QPainterPath>
 #include <QRandomGenerator>
