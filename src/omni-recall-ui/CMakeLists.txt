@@ -10,13 +10,13 @@ set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 COMPONENTS Core Gui Widgets Sql Network REQUIRED)
 
-add_executable(omni_recall_ui
+add_executable(omni-recall-ui
     main.cpp
     mainwindow.cpp
     mainwindow.h
 )
 
-target_link_libraries(omni_recall_ui PRIVATE 
+target_link_libraries(omni-recall-ui PRIVATE 
     Qt6::Core 
     Qt6::Gui 
     Qt6::Widgets 
