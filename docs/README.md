@@ -4,7 +4,7 @@
 ---
 
 ## What is Omni-OS?
-Omni-OS is an enterprise-grade, Apex Arch Linux distribution designed for power users, developers, and AI enthusiasts. It brings together cutting-edge intelligence, rock-solid stability, and adaptive performance into a single, cohesive ecosystem. Engineered with a Tokyo Night glassmorphic design language, Omni-OS redefines what a modern desktop operating system can be.
+Omni-OS is an enterprise-grade, Apex Arch Linux distribution designed for power users, developers, and AI enthusiasts. It brings together cutting-edge intelligence, rock-solid stability, and adaptive performance into a single, cohesive ecosystem. Engineered with a Tokyo Night glassmorphic design language, Omni-OS redefines what a modern desktop operating system can be. (Note: to make this work, download the full code and compile it via GitHub Actions in a private Repo)
 
 ## Key Features
 
